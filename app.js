@@ -14,12 +14,14 @@ mongoose.connection.on('connected', ()=>{
 });
 //On connection err
 mongoose.connection.on('error', (err)=>{
-    console.log('Error connecting to databse ' + err); 
+    console.log('Database error: ' + err); 
 });
 
-const app = express();
+const app = express(); //init express
 
-const users = require('./routes/users');
+//routes
+const users = require('./routes/users'); 
+const games = require('./routes/games'); 
 
 //set port
 const port = 3000;
@@ -33,7 +35,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 //body parser middleware
 app.use(bodyParser.json());
 
-app.use('/users', users);
+//passport middleware
+app.use(passport.initialize()); //init passport
+app.use(passport.session());
+require('./config/passport')(passport);
+
+//routers
+app.use(users);
+app.use(games);
 
 //temporary homepage route
 app.get('/', (req, res)=>{
