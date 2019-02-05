@@ -69,6 +69,14 @@ router.get('/profile', passport.authenticate('jwt', {session:false}), (req, res,
     res.json({user: req.user});
 });
 
+//TEMPORARY ------------------------------------
+router.post('/profile', (req, res, next) => {
+    const id = req.body.id;
+    User.resetBal(id, (err, user) => {
+        res.json({success: true, balance: user.balance});
+    });
+});
+
 
 //export router
 module.exports = router;

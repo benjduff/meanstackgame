@@ -44,7 +44,7 @@ module.exports.calcUserWinChance = function(){
 }
 
 module.exports.startGame = function(){
-    //start countdown timer, calculate winner
+    //start countdown timer
 }
 
 module.exports.calcWinner = function(){

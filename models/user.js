@@ -40,6 +40,11 @@ module.exports.getUserByUsername = function(username, callback){
     User.findOne(query, callback);
 }
 
+//find user balance
+module.exports.getBalance = function(id, callback){
+    User.findById(id, callback);
+}
+
 //add new user
 module.exports.addUser = function(newUser, callback){
     //using bcrypt module generate 10 rounds of salt (default amount)
@@ -61,7 +66,18 @@ module.exports.comparePassword = function(candidatePassword, hash, callback){
     });
 }
 
-//check user bal for betAmount, either make bet or return funds not available
-module.exports.makeBet = function(id, betAmount, callback){
+//update user balance
+module.exports.makeBet = function(id, updatedBalance, callback){
+    const update = {
+        balance: updatedBalance
+    }
+    User.findByIdAndUpdate(id, update, {new: true},callback);
+}
 
+//reset user balance to 2k --FOR TESTING ONLY--
+module.exports.resetBal = function(id, callback){
+    const update = {
+        balance: 2000
+    }
+    User.findByIdAndUpdate(id, update, {new: true}, callback);
 }

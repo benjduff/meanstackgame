@@ -1,6 +1,7 @@
 const express = require('express');
 const config = require('../config/database');
 const Game = require('../models/game');
+const User = require('../models/user');
 const router = express.Router();
 const passport = require('passport');
 
@@ -51,9 +52,42 @@ router.get('/gamble', (req,res,next) => {
 
 
 router.post('/gamble', (req,res,next) => {
-    Game.addUserWhenBet(bet, (err, user) => {
-
+    const user = {
+        id: req.body.id,
+        bet: req.body.bet
+    }    
+    //get the user by id
+    User.getUserById(user.id, (err, foundUser) => {
+        if(err) throw err;
+        //check if bet > balance or balance <=0 and return appropriate
+        if(user.bet > foundUser.balance || foundUser.balance <= 0){
+            res.json({success: false, msg:"Funds not available!"});
+        } else {
+            const updatedBalance = foundUser.balance -= user.bet;
+            //pass this updatedBalance to User.makeBet
+            User.makeBet(user.id, updatedBalance, (err, updatedUser) => {
+                if(err) throw err;
+                if(!updatedUser){
+                    res.json({success: false, msg:"Something went wrong making the bet!"});
+                } else {
+                    res.json({success: true, msg: "Bet has been placed!"});
+                    console.log("Updated balance is: "+updatedUser.balance);
+                }
+            });
+        }
     });
+
+
+    //add the user to the users array
+   /* Game.addUserWhenBet(betAmount, (err, user) => {
+
+    });*/
+    //add user bet amount to the pot
+
+
+
+
+    //response
 });
 
 module.exports = router;
