@@ -81,7 +81,7 @@ router.post('/gamble', (req,res,next) => {
     //add the user to the users array
    /* Game.addUserWhenBet(betAmount, (err, user) => {
 
-    });*/
+    });*/ 
     //add user bet amount to the pot
 
 
