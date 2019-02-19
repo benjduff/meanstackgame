@@ -32,6 +32,7 @@ router.get('/gamble', (req,res,next) => {
         if(!foundGame) {
             res.json({success: false, msg: 'There are no currently active games!'});
         } else {
+            //CHECK FOR 3 OR MORE PLAYERS IN THE GAME
             res.json({
                 success: true, 
                 msg: "A active game has been returned.",
@@ -54,7 +55,8 @@ router.get('/gamble', (req,res,next) => {
 router.post('/gamble', (req,res,next) => {
     const user = {
         id: req.body.id,
-        bet: req.body.bet
+        bet: req.body.bet,
+        username: req.body.username
     }    
     //get the user by id
     User.getUserById(user.id, (err, foundUser) => {
@@ -70,24 +72,24 @@ router.post('/gamble', (req,res,next) => {
                 if(!updatedUser){
                     res.json({success: false, msg:"Something went wrong making the bet!"});
                 } else {
-                    res.json({success: true, msg: "Bet has been placed!"});
-                    console.log("Updated balance is: "+updatedUser.balance);
-                }
-            });
-        }
-    });
-
-
-    //add the user to the users array
-   /* Game.addUserWhenBet(betAmount, (err, user) => {
-
-    });*/
-    //add user bet amount to the pot
-
-
-
-
-    //response
+                    Game.findActiveGame((err, currentGame) => {
+                        if(err) throw err;
+                        if(!currentGame){
+                            res.json({success: false, msg:"There is no current game!"});
+                        } else {
+                            Game.addUserUpdatePot(user.username, user.bet, currentGame._id, currentGame.pot, (err, game) => {
+                                if(err) throw err;
+                                    res.json({success: true, msg: user.username+" has joined the game!"});
+                                    console.log(game);
+                                    //CHECK FOR 3 OR MORE PLAYERS IN THE GAME
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+     });
+     
 });
 
 module.exports = router;
