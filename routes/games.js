@@ -89,7 +89,6 @@ router.post('/gamble', (req,res,next) => {
                 });
             }
      });
-     
 });
 
 module.exports = router;
