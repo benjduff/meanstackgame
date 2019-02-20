@@ -32,7 +32,6 @@ module.exports.createGame = function(newGame, callback){
 //Find any currently active games
 module.exports.findActiveGame = function(callback){    
     //since there will only be 1 instance of an active game, just need to findOne() and get back the onject instead of find() which returns array of objects
-    startGame();
     Game.findOne({'status': 'active'}, callback); 
 }
 
@@ -61,16 +60,17 @@ module.exports.calcUserWinChance = function(){
 
 }
 
-module.exports.startGame = function(gameId){
+module.exports.startGame = function(gameId, callback){
     //set the end of the game to 45 seconds from now
     const endGameTime = new Date();
     endGameTime.setSeconds(endGameTime.getSeconds() + 45);
     
-    Game.findByIdAndUpdate(gameId, {"gameEnd": endGameTime}, {new: true}, callback);
+    Game.findByIdAndUpdate(gameId, {$set: {"gameEnd": endGameTime}}, {new: true}, callback);
 }
 
 module.exports.calcWinner = function(){
     //calculate winner algorithm, return winner
+
 }
 
 module.exports.finishGame = function(){

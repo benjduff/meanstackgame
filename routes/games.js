@@ -77,11 +77,17 @@ router.post('/gamble', (req,res,next) => {
                         if(!currentGame){
                             res.json({success: false, msg:"There is no current game!"});
                         } else {
-                            Game.addUserUpdatePot(user.username, user.bet, currentGame._id, currentGame.pot, (err, game) => {
+                            Game.addUserUpdatePot(user.username, user.bet, currentGame._id, currentGame.pot, (err, thisgame) => {
                                 if(err) throw err;
-                                    res.json({success: true, msg: user.username+" has joined the game!"});
-                                    console.log(game);
                                     //CHECK FOR 3 OR MORE PLAYERS IN THE GAME
+                                    if(thisgame.users.length >= 2 && thisgame.gameEnd == undefined){
+                                        Game.startGame(thisgame._id, (err) => {
+                                            if(err)throw err;
+                                            res.json({success: true, msg: "The game has started and will end at: " +thisgame.gameEnd});
+                                        });
+                                    } else {
+                                        res.json({success: true, msg: "game has already started!"});
+                                    }
                                 });
                             }
                         });
