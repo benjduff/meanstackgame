@@ -10,6 +10,9 @@ const GameSchema = mongoose.Schema({
         type: Number,
         required: true
     },
+    tickets:{
+        type: Number
+    },
     status:{
         type: String
     },
@@ -35,9 +38,9 @@ module.exports.findActiveGame = function(callback){
     Game.findOne({'status': 'active'}, callback); 
 }
 
-module.exports.addUserUpdatePot = function(username, bet, gameId, pot, callback){
+module.exports.addUserUpdatePot = function(gameId, userId, userTickets, callback){
     //add user to game then User.makeBet then add their bet amount to the pot if User.makeBet successful
-    bet = parseFloat(bet);
+    bet = parseFloat(userTickets);
     pot = parseFloat(pot);
 
     Game.findByIdAndUpdate(gameId,
@@ -47,9 +50,12 @@ module.exports.addUserUpdatePot = function(username, bet, gameId, pot, callback)
             { "users": 
                 {
                     "username": username, 
-                    "betAmount": bet
+                    "betAmount": bet,
+                    "userId": userId,
+                    "tickets": userTickets
                 }
-            }
+            },
+            "tickets": totalGameTickets
         },
         {new: true}, 
         callback);
@@ -64,11 +70,10 @@ module.exports.startGame = function(gameId, callback){
     //set the end of the game to 45 seconds from now
     const endGameTime = new Date();
     endGameTime.setSeconds(endGameTime.getSeconds() + 45);
-    
     Game.findByIdAndUpdate(gameId, {$set: {"gameEnd": endGameTime}}, {new: true}, callback);
 }
 
-module.exports.calcWinner = function(){
+module.exports.calcWinner = function(gameId, user){
     //calculate winner algorithm, return winner
 
 }

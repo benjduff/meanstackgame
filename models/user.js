@@ -67,7 +67,7 @@ module.exports.comparePassword = function(candidatePassword, hash, callback){
 }
 
 //update user balance
-module.exports.makeBet = function(id, updatedBalance, callback){
+module.exports.updateBalance = function(id, updatedBalance, callback){
     const update = {
         balance: updatedBalance
     }

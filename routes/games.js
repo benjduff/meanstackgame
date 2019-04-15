@@ -4,6 +4,7 @@ const Game = require('../models/game');
 const User = require('../models/user');
 const router = express.Router();
 const passport = require('passport');
+const GamesController = require('../controllers/games');
 
 //create game - PROTECT
 router.post('/creategame', (req, res, next) => {
@@ -52,49 +53,6 @@ router.get('/gamble', (req,res,next) => {
 });
 
 
-router.post('/gamble', (req,res,next) => {
-    const user = {
-        id: req.body.id,
-        bet: req.body.bet,
-        username: req.body.username
-    }    
-    //get the user by id
-    User.getUserById(user.id, (err, foundUser) => {
-        if(err) throw err;
-        //check if bet > balance or balance <=0 and return appropriate
-        if(user.bet > foundUser.balance || foundUser.balance <= 0){
-            res.json({success: false, msg:"Funds not available!"});
-        } else {
-            const updatedBalance = foundUser.balance -= user.bet;
-            //pass this updatedBalance to User.makeBet
-            User.makeBet(user.id, updatedBalance, (err, updatedUser) => {
-                if(err) throw err;
-                if(!updatedUser){
-                    res.json({success: false, msg:"Something went wrong making the bet!"});
-                } else {
-                    Game.findActiveGame((err, currentGame) => {
-                        if(err) throw err;
-                        if(!currentGame){
-                            res.json({success: false, msg:"There is no current game!"});
-                        } else {
-                            Game.addUserUpdatePot(user.username, user.bet, currentGame._id, currentGame.pot, (err, thisgame) => {
-                                if(err) throw err;
-                                    //CHECK FOR 3 OR MORE PLAYERS IN THE GAME
-                                    if(thisgame.users.length >= 2 && thisgame.gameEnd == undefined){
-                                        Game.startGame(thisgame._id, (err) => {
-                                            if(err)throw err;
-                                            res.json({success: true, msg: "The game has started and will end at: " +thisgame.gameEnd});
-                                        });
-                                    } else {
-                                        res.json({success: true, msg: "game has already started!"});
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-     });
-});
+router.post('/gamble', GamesController.gameAddUser);
 
 module.exports = router;
