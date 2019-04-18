@@ -36,7 +36,7 @@ router.get('/gamble', (req,res,next) => {
             //CHECK FOR 3 OR MORE PLAYERS IN THE GAME
             res.json({
                 success: true, 
-                msg: "A active game has been returned.",
+                msg: "An active game has been returned.",
             });
 
             //create new instance of a game and set game values to foundGame properties

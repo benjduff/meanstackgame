@@ -38,27 +38,41 @@ module.exports.findActiveGame = function(callback){
     Game.findOne({'status': 'active'}, callback); 
 }
 
-module.exports.addUserUpdatePot = function(gameId, userId, userTickets, callback){
+module.exports.addUserUpdatePot = function(gameId, userId, userTickets, username, callback){
     //add user to game then User.makeBet then add their bet amount to the pot if User.makeBet successful
     bet = parseFloat(userTickets);
-    pot = parseFloat(pot);
 
-    Game.findByIdAndUpdate(gameId,
-        {
-            "pot": pot+=bet,
-            $push: 
-            { "users": 
-                {
-                    "username": username, 
-                    "betAmount": bet,
+        Game.findOneAndUpdate(
+            gameId, 
+            {$inc:{pot: userTickets}, 
+            $push:{
+                "users": 
+                    {
+                    "username": username,
                     "userId": userId,
                     "tickets": userTickets
+                    }
                 }
-            },
-            "tickets": totalGameTickets
-        },
-        {new: true}, 
-        callback);
+            }, 
+            {new: true}, 
+            callback);
+
+    // Game.findByIdAndUpdate(gameId,
+    //     {
+    //         "pot": pot+=userTickets,
+    //         $push: 
+    //         { "users": 
+    //             {
+    //                 "username": username, 
+    //                 "betAmount": bet,
+    //                 "userId": userId,
+    //                 "tickets": userTickets
+    //             },
+    //         },
+    //         "tickets": totalGameTickets
+    //     },
+    //     {new: true}, 
+    //     callback);
 }
 
 module.exports.calcUserWinChance = function(){
