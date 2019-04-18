@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const config = require('../config/database');
 const User = require('./user');
+const moment = require('moment');
 
 const GameSchema = mongoose.Schema({
     users:{
@@ -36,43 +37,28 @@ module.exports.createGame = function(newGame, callback){
 module.exports.findActiveGame = function(callback){    
     //since there will only be 1 instance of an active game, just need to findOne() and get back the onject instead of find() which returns array of objects
     Game.findOne({'status': 'active'}, callback); 
+
 }
 
 module.exports.addUserUpdatePot = function(gameId, userId, userTickets, username, callback){
     //add user to game then User.makeBet then add their bet amount to the pot if User.makeBet successful
     bet = parseFloat(userTickets);
 
-        Game.findOneAndUpdate(
-            gameId, 
-            {$inc:{pot: userTickets}, 
-            $push:{
-                "users": 
-                    {
-                    "username": username,
-                    "userId": userId,
-                    "tickets": userTickets
-                    }
+    Game.findOneAndUpdate(
+        gameId, 
+        {$inc:
+            {pot: userTickets}, 
+        $push:{
+            "users": 
+                {
+                "username": username,
+                "userId": userId,
+                "tickets": userTickets
                 }
-            }, 
-            {new: true}, 
-            callback);
-
-    // Game.findByIdAndUpdate(gameId,
-    //     {
-    //         "pot": pot+=userTickets,
-    //         $push: 
-    //         { "users": 
-    //             {
-    //                 "username": username, 
-    //                 "betAmount": bet,
-    //                 "userId": userId,
-    //                 "tickets": userTickets
-    //             },
-    //         },
-    //         "tickets": totalGameTickets
-    //     },
-    //     {new: true}, 
-    //     callback);
+            }
+        }, 
+        {new: true}, 
+        callback);
 }
 
 module.exports.calcUserWinChance = function(){
@@ -82,8 +68,8 @@ module.exports.calcUserWinChance = function(){
 
 module.exports.startGame = function(gameId, callback){
     //set the end of the game to 45 seconds from now
-    const endGameTime = new Date();
-    endGameTime.setSeconds(endGameTime.getSeconds() + 45);
+    const endGameTime = moment();
+    endGameTime.add(45, 's');
     Game.findByIdAndUpdate(gameId, {$set: {"gameEnd": endGameTime}}, {new: true}, callback);
 }
 

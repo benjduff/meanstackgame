@@ -5,6 +5,7 @@ const User = require('../models/user');
 const router = express.Router();
 const passport = require('passport');
 const GamesController = require('../controllers/games');
+const moment = require('moment');
 
 //create game - PROTECT
 router.post('/creategame', (req, res, next) => {
@@ -32,8 +33,9 @@ router.get('/gamble', (req,res,next) => {
         if(err) throw err;
         if(!foundGame) {
             res.json({success: false, msg: 'There are no currently active games!'});
+        } else if(moment().isAfter(foundGame.gameEnd)){
+            res.json({success: false, msg:"Game '" + foundGame.id + "' has already ended."});
         } else {
-            //CHECK FOR 3 OR MORE PLAYERS IN THE GAME
             res.json({
                 success: true, 
                 msg: "An active game has been returned.",
@@ -44,7 +46,8 @@ router.get('/gamble', (req,res,next) => {
                 id: foundGame._id,
                 users: foundGame.users,
                 pot: foundGame.pot,
-                status: foundGame.status
+                status: foundGame.status,
+                end: foundGame.gameEnd
             });
 
             console.log(activeGame);

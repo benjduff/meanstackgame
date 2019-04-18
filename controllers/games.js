@@ -6,9 +6,7 @@ const router = express.Router();
 const passport = require('passport');
 const GamesController = require('../controllers/games');
 
-exports.gameAddUser =  
-
-(req,res,next) => {
+exports.gameAddUser = (req,res,next) => {
     const user = {
         id: req.body.userId,
         bet: req.body.bet,
@@ -34,14 +32,24 @@ exports.gameAddUser =
                             id: updatedGame._id,
                             users: updatedGame.users,
                             pot: updatedGame.pot,
-                            status: updatedGame.status
+                            status: updatedGame.status,
+                            end: updatedGame.gameEnd
                         });
+                        if(currentGame.users > 2){
+                            Game.startGame();
+                        }
                         console.log(currentGame); 
                     }
                 });
             });
         }
     });
+
+    exports.checkGameEnded = function(){
+
+    }
+
+
 
 
 
