@@ -5,7 +5,41 @@ const User = require('../models/user');
 const router = express.Router();
 const passport = require('passport');
 const GamesController = require('../controllers/games');
+const moment = require('moment');
 
+//find a active game (should only be 1 anyway) and return game as 'foundGame'
+exports.findActiveGame = function(req, res, next){
+    Game.findActiveGame((err, foundGame) => { 
+        if(err) throw err;
+        if(!foundGame) {
+            next();
+        } else if(moment().isAfter(foundGame.gameEnd)){
+            res.json({success: false, msg:"Game '" + foundGame._id + "' has already ended."});
+        } else {
+            res.json({
+                success: true, 
+                msg: "A currently active game has been returned.",
+                game: foundGame
+            });
+        }
+    });
+}
+
+//create new game with active status
+exports.createActiveGame = function(req, res){
+    const query = new Game({
+        pot: req.body.pot,
+        status: "active"
+    });
+
+    Game.createGame(query, (err, game) => {
+        if(err) throw err;
+        (!game) ? res.json({success: false, msg:"Oops, there was an error creating the game!"}) : res.json({success: true, msg:"Game created successfully!", game: game});
+    });
+}
+
+
+//add a user to the current game
 exports.gameAddUser = (req,res,next) => {
     const user = {
         id: req.body.userId,
@@ -27,7 +61,6 @@ exports.gameAddUser = (req,res,next) => {
                 Game.addUserUpdatePot(gameId, user.id, userTickets, user.username, (err, updatedGame) => {
                     if(err) throw err;
                     if(updatedGame){
-                        res.json({success: true, msg:"user added to game, pot updated successfully."});
                         const currentGame = new Game({
                             id: updatedGame._id,
                             users: updatedGame.users,
@@ -35,67 +68,52 @@ exports.gameAddUser = (req,res,next) => {
                             status: updatedGame.status,
                             end: updatedGame.gameEnd
                         });
-                        if(currentGame.users > 2){
-                            Game.startGame();
+                        console.log("Game Id: " + currentGame.id);
+
+                        if(currentGame.users.length > 2 && currentGame.end == null){
+                            const endGameTime = moment().add(45, 's').toDate();
+                            Game.startGame(currentGame.id, endGameTime, (err, game) => {                                
+                                if(err)throw err;
+                                if(!game) res.json({success: false, msg:"Game not found."}); 
+                                return res.json({success: true, msg:"User added to game.. Game started at: " + endGameTime});
+                                });
+                        } else {
+                            res.json({success: true, msg:"user added to game.. Pot updated successfully."}); 
                         }
-                        console.log(currentGame); 
                     }
                 });
             });
         }
     });
-
-    exports.checkGameEnded = function(){
-
-    }
+}
 
 
 
 
 
 
-    // User.getUserById(user.id, (err, foundUser) => {
-    //     if (err) throw err;
-    //     //check if bet > balance or balance <=0 and return appropriate
-    //     if (user.bet > foundUser.balance || foundUser.balance <= 0) {
-    //         res.json({ success: false, msg: "Funds not available!" });
-    //     } else {
-    //         const updatedBalance = foundUser.balance -= user.bet;
-    //         const ticketValue = user.bet * 0.01;
-    //         //pass this updatedBalance to User.makeBet
-    //         User.makeBet(user.id, updatedBalance, (err, updatedUser) => {
-    //             if (err) throw err;
-    //             if (!updatedUser) {
-    //                 res.json({ success: false, msg: "Something went wrong making the bet!" });
-    //             } else {
-    //                 Game.findActiveGame((err, currentGame) => {
-    //                     if (err) throw err;
-    //                     if (!currentGame) {
-    //                         res.json({ success: false, msg: "There is no current game!" });
-    //                     } else {
-    //                         const userTickets = new Array[ticketValue];
-    //                         const totalGameTickets = currentGame.tickets + userTickets;
-    //                         Game.addUserUpdatePot(user.bet, currentGame._id, currentGame.pot, user.id, userTickets, totalGameTickets, (err, thisgame) => {
-    //                             if (err) throw err;
-    //                             //CHECK FOR 3 OR MORE PLAYERS IN THE GAME
-    //                             if (thisgame.users.length >= 2 && thisgame.gameEnd == undefined) {
-    //                                 Game.startGame(thisgame._id, (err) => {
-    //                                     if (err) throw err;
-    //                                     res.json({ success: true, msg: "The game has started and will end at: " + thisgame.gameEnd });
-    //                                 });
-    //                             } else {
-    //                                 setTimeout(Game.calcWinner(thisgame.id, user, (err, winner) => {
-    //                                     if (err) throw err;
-    //                                     res.json({ success: true, msg: "The winner of this game is " + winner });
-    //                                 }), 45000);
-    //                             }
-    //                         });
-    //                     }
-    //                 });
-    //             }
-    //         });
-    //     }
-    // })
+exports.setComplete = function(req, res, next){
+    const gameId = req.body.gameId;
+
+    Game.setComplete(gameId, (err, updated)  => {
+        if(err) throw err;
+        if(updated) res.json({success: true, msg:"Game: " + gameId + " has ended"});
+        next();
+    });
+}
+
+exports.calculateWinner = function(req, res, next){
+    users.forEach(user => {
+        if(count < winPerc || user.tickets > winPerc){
+            break;
+        } else {
+            Game.submitWinner(user, (err, res) => {
+                if(err) throw err;
+                //calculate users chance of winning here(winChance)
+                res.json({success: false, msg:"The winner of this round is " + user.username + "! With a wining chance of " + winChance + "%"});
+            })
+        }
+    });
 }
 
 

@@ -21,7 +21,8 @@ const GameSchema = mongoose.Schema({
         type: Object
     },
     gameEnd: {
-        type: Date
+        type: Date,
+        unique: true
     }
 });
 
@@ -61,25 +62,33 @@ module.exports.addUserUpdatePot = function(gameId, userId, userTickets, username
         callback);
 }
 
-module.exports.calcUserWinChance = function(){
-    //every time new user places a bet, calculate winChance for all users based off their bet amount
 
+module.exports.setComplete = function(gameId, callback){
+    Game.findOneAndUpdate(gameId, {$push:{"status":"Complete"}}, {new: true}, callback);
 }
 
-module.exports.startGame = function(gameId, callback){
-    //set the end of the game to 45 seconds from now
-    const endGameTime = moment();
-    endGameTime.add(45, 's');
-    Game.findByIdAndUpdate(gameId, {$set: {"gameEnd": endGameTime}}, {new: true}, callback);
-}
+// module.exports.calcUserWinChance = function(){
+//     //every time new user places a bet, calculate winChance for all users based off their bet amount
 
-module.exports.calcWinner = function(gameId, user){
-    //calculate winner algorithm, return winner
+// }
 
-}
+// module.exports.checkGameEndExists = function(gameId, callback){
+//     Game.findOneAndUpdate(game) //TO DO
+// }
 
-module.exports.finishGame = function(){
-    //pay winner of current game the pot amount and set game status to finished
-}
+// module.exports.startGame = function(gameId, endGameTime, callback){
+//     console.log(endGameTime);
+    
+//     Game.findOneAndUpdate(gameId, {$set: {"gameEnd" : endGameTime}}, {unique: true}, callback);
+// }
+
+// module.exports.calcWinner = function(gameId, user){
+//     //calculate winner algorithm, return winner
+
+// }
+
+// module.exports.finishGame = function(){
+//     //pay winner of current game the pot amount and set game status to finished
+// }
 
  
