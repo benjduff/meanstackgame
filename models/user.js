@@ -21,6 +21,9 @@ const UserSchema = mongoose.Schema({
     },
     balance:{
         type: Number
+    },
+    gamesWon:{
+        type: Array
     }
 });
 
@@ -81,3 +84,18 @@ module.exports.resetBal = function(id, callback){
     }
     User.findByIdAndUpdate(id, update, {new: true}, callback);
 }
+
+module.exports.payWinner = function(userId, pot, gameId, callback){
+    User.findOneAndUpdate(userId, 
+        {$inc: 
+            {"balance" : pot}, 
+        $push:
+            {"gamesWon": 
+                {
+                    "gameId": gameId
+                }
+            }
+        }, 
+        {new: true}, 
+        callback)
+    }

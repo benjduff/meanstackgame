@@ -27,9 +27,11 @@ exports.findActiveGame = function(req, res, next){
 
 //create new game with active status
 exports.createActiveGame = function(req, res){
+    const winPerc = Math.random();
     const query = new Game({
         pot: req.body.pot,
-        status: "active"
+        status: "active",
+        winPerc: winPerc
     });
 
     Game.createGame(query, (err, game) => {
@@ -58,7 +60,7 @@ exports.gameAddUser = (req,res,next) => {
             User.updateBalance(returnedUser.id, updatedBalance, (err) => {
                 if (err) throw err;
                 let userTickets = user.bet * 0.01;
-                Game.addUserUpdatePot(gameId, user.id, userTickets, user.username, (err, updatedGame) => {
+                Game.addUserUpdatePot(gameId, user.id, user.bet, userTickets, user.username, (err, updatedGame) => {
                     if(err) throw err;
                     if(updatedGame){
                         const currentGame = new Game({
@@ -75,7 +77,7 @@ exports.gameAddUser = (req,res,next) => {
                             Game.startGame(currentGame.id, endGameTime, (err, game) => {                                
                                 if(err)throw err;
                                 if(!game) res.json({success: false, msg:"Game not found."}); 
-                                return res.json({success: true, msg:"User added to game.. Game started at: " + endGameTime});
+                                return res.json({success: true, msg:"User added to game.. Game will end at: " + endGameTime});
                                 });
                         } else {
                             res.json({success: true, msg:"user added to game.. Pot updated successfully."}); 
@@ -93,26 +95,47 @@ exports.gameAddUser = (req,res,next) => {
 
 
 exports.setComplete = function(req, res, next){
-    const gameId = req.body.gameId;
-
+    const gameId = req.params.gameId;
+    
     Game.setComplete(gameId, (err, updated)  => {
         if(err) throw err;
-        if(updated) res.json({success: true, msg:"Game: " + gameId + " has ended"});
-        next();
+        if(!updated) res.json({success: false, msg:"There was an error ending the game."});
+        res.locals.completedGame = updated;
+        return next();
     });
 }
 
-exports.calculateWinner = function(req, res, next){
-    users.forEach(user => {
-        if(count < winPerc || user.tickets > winPerc){
-            break;
-        } else {
-            Game.submitWinner(user, (err, res) => {
+exports.calcWinner = function(req, res, next){    
+    const winNo = res.locals.completedGame.winPerc * (res.locals.completedGame.pot * 0.01);
+    const players = res.locals.completedGame.users;
+    var minWinNo = 0.0;
+
+    players.forEach(player => { //check each user in users arr to find if winNo is within user tix range        
+        var maxWinNo = minWinNo + player.tickets; //change userTickets see below comment.
+        console.log(maxWinNo);
+
+
+        if(winNo >= minWinNo && winNo <= maxWinNo){ //FIX - change to correct algorithm to find if winning number (winNo) is between the count and the users tickets, if not then break
+            res.locals.winnerId = player.userId;
+            res.locals.winnerUsername = player.username;
+            res.locals.winChance = (player.tickets * 100) / res.locals.completedGame.pot * 100;
+
+            Game.submitWinner(res.locals.completedGame.gameId, res.locals.winnerId, res.locals.winnerUsername, res.locals.winChance, (err, game) => {
                 if(err) throw err;
-                //calculate users chance of winning here(winChance)
-                res.json({success: false, msg:"The winner of this round is " + user.username + "! With a wining chance of " + winChance + "%"});
-            })
+                if(!game) res.json({success: false, msg:"There was an error submitting the winner."})
+                return next();
+            });
+        } else {
+            minWinNo = maxWinNo;
         }
+    });
+}
+
+exports.payWinner = function(req, res){
+    User.payWinner(res.locals.winnerId, res.locals.winChance, res.locals.completedGame._id, (err, user) => {
+        if(err) throw err;
+        // (!user) ? res.json({success: false, msg:"Winner could not be found."}) : res.json({success: true, msg:"The winner is " + user.username + " with a win % of " + res.locals.winChance + "%"});
+         (!user) ? res.json({success: false, msg:"Winner could not be found."}) : console.log("The winner is " + res.locals.winnerUsername + " with a win chance of " + res.locals.winChance + "%");
     });
 }
 

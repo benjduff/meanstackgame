@@ -34,7 +34,7 @@ router.post('/login', (req, res, next)=>{
     User.getUserByUsername(username, (err, user) => {
         if(err) throw err;
         if(!user){
-            return res.json({success: false, msg:"User was not found!"});
+            return res.json({success: false, msg:"User was not found!"}); 
         }
 
         //if the user was found, compare the entered password with the stored password

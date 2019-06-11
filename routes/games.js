@@ -18,8 +18,7 @@ router.post('/gamble', GamesController.gameAddUser);
 
 
 //SET STATUS - PROTECT
-router.post('/gameStatus', GamesController.setGameStatus);
-//GET STATUS - PROTECT
+router.post('/endGame/:gameId', GamesController.setComplete, GamesController.calcWinner, GamesController.payWinner);
 //router.get('/gameStatus', GamesController.getGameStatus)
 
 

@@ -17,6 +17,9 @@ const GameSchema = mongoose.Schema({
     status:{
         type: String
     },
+    winPerc:{
+        type: Number
+    },
     winner: {
         type: Object
     },
@@ -41,16 +44,16 @@ module.exports.findActiveGame = function(callback){
 
 }
 
-module.exports.addUserUpdatePot = function(gameId, userId, userTickets, username, callback){
+module.exports.addUserUpdatePot = function(gameId, userId, bet, userTickets, username, callback){
     //add user to game then User.makeBet then add their bet amount to the pot if User.makeBet successful
-    bet = parseFloat(userTickets);
+    //bet = parseFloat(userTickets);
 
     Game.findOneAndUpdate(
         gameId, 
         {$inc:
-            {pot: userTickets}, 
-        $push:{
-            "users": 
+            {pot: bet}, 
+        $push:
+            {"users": 
                 {
                 "username": username,
                 "userId": userId,
@@ -64,7 +67,7 @@ module.exports.addUserUpdatePot = function(gameId, userId, userTickets, username
 
 
 module.exports.setComplete = function(gameId, callback){
-    Game.findOneAndUpdate(gameId, {$push:{"status":"Complete"}}, {new: true}, callback);
+    Game.findOneAndUpdate(gameId, {$set:{"status":"Complete"}}, {new: true}, callback);
 }
 
 // module.exports.calcUserWinChance = function(){
@@ -76,11 +79,26 @@ module.exports.setComplete = function(gameId, callback){
 //     Game.findOneAndUpdate(game) //TO DO
 // }
 
-// module.exports.startGame = function(gameId, endGameTime, callback){
-//     console.log(endGameTime);
-    
-//     Game.findOneAndUpdate(gameId, {$set: {"gameEnd" : endGameTime}}, {unique: true}, callback);
-// }
+module.exports.startGame = function(gameId, endGameTime, callback){
+    console.log(endGameTime);
+
+    Game.findOneAndUpdate(gameId, {$set: {"gameEnd" : endGameTime}}, {unique: true}, callback);
+}
+
+module.exports.submitWinner = function(gameId, userId, username, winChance, callback){
+    Game.findOneAndUpdate(gameId, 
+        {$set:
+            {"winner" : 
+                {
+                    "userId" : userId,
+                    "username" : username,
+                    "winChance" : winChance
+                }
+            }
+        },
+        {new: true}, 
+        callback);
+}
 
 // module.exports.calcWinner = function(gameId, user){
 //     //calculate winner algorithm, return winner
